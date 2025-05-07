@@ -32,15 +32,17 @@
     cd rustbot
     ```
 2.  **Создайте `.env`:**
+    ```dotenv
     TELOXIDE_TOKEN=<api токен телеграм бота>
     WEATHER_API_KEY=<api токен openwethermap>
     WEB_PORT=6001
-3.  **Соберите Docker-образ:**
+    ```
+4.  **Соберите Docker-образ:**
     ```bash
     docker build -t my-rust-bot-app .
     ```
 
-4.  **Запустите Docker-контейнер:**
+5.  **Запустите Docker-контейнер:**
     ```bash
     docker run -d --name rust-bot-container -p 6001:6001 --env-file .env my-rust-bot-app
     ```
