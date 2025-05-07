@@ -28,7 +28,7 @@
 
 1.  **Клонируйте репозиторий:**
     ```bash
-    git clone https://github.com/Venizar/rustbot/tree/main
+    git clone https://github.com/Venizar/rustbot/
     cd rustbot
     ```
 2.  **Создайте `.env`:**
