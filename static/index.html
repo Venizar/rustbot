@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rust Бот</title>
+
+    <style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+:root {
+    --text-color: #E3E3E3;
+    --subheading-color: #828282;
+    --placeholder-color: #A6A6A6;
+    --primary-color: #242424;
+    --secondary-color: #383838;
+    --secondary-hover-color: #444;
+    --icon-color: #A6A6A6;
+}
+.light_mode {
+    --text-color: #222;
+    --subheading-color: #A0A0A0;
+    --placeholder-color: #6C6C6C;
+    --primary-color: #FFF;
+    --secondary-color: #E9EEF6;
+    --secondary-hover-color: #DBE1EA;
+    --icon-color: #6C6C6C;
+}
+body {
+    background: var(--primary-color);
+}
+.header, .chat-list, .typing-form {
+    margin: 0 auto;
+    max-width: 980px;
+}
+ .chat-list .message {
+     margin: 0 auto;
+     max-width: 980px;
+ }
+.header {
+    margin-top: 6vh;
+    padding: 1rem;
+    overflow-x: hidden;
+    background: var(--primary-color);
+    z-index: 10;
+}
+body.hide-header .header {
+    display: none;
+}
+.header :where(.title, .subtitle) {
+    color: var(--text-color);
+    font-weight: 500;
+    line-height: 1.2;
+}
+.header .title {
+    width: fit-content;
+    font-size: 2.5rem;
+    background-clip: text;
+    background: linear-gradient(to right, #8e44ad, #c039a3);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 5px;
+}
+.header .subtitle {
+    font-size: 1.5rem;
+    color: var(--subheading-color);
+    font-weight: 400;
+}
+.suggestion-list {
+    width: 100%;
+    list-style: none;
+    display: flex;
+    gap: 1rem;
+    margin-top: 4vh;
+    padding: 0.5rem 0;
+    overflow: hidden;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.suggestion-list::-webkit-scrollbar { display: none; }
+.suggestion-list .suggestion {
+    cursor: pointer;
+    padding: 1rem;
+    width: 200px;
+    min-height: 100px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    border-radius: 0.75rem;
+    justify-content: space-between;
+    background: var(--secondary-color);
+    transition: 0.2s ease;
+    scroll-snap-align: start;
+}
+.suggestion-list .suggestion:hover {
+    background: var(--secondary-hover-color);
+}
+.suggestion-list .suggestion .text {
+    font-weight: 400;
+    font-size: 0.9rem;
+    color: var(--text-color);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+     margin-bottom: 0.5rem;
+}
+.suggestion-list .suggestion .icon {
+     width: 35px;
+     height: 35px;
+     display: flex;
+     font-size: 1.1rem;
+     align-self: flex-end;
+     align-items: center;
+     border-radius: 50%;
+     justify-content: center;
+     color: var(--text-color);
+     background: var(--primary-color);
+}
+.chat-list {
+    height: calc(100vh - 140px);
+    overflow-y: auto;
+    padding: 1rem 1rem 1rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--subheading-color) var(--secondary-color);
+}
+ .chat-list::-webkit-scrollbar { width: 8px; }
+ .chat-list::-webkit-scrollbar-track { background: var(--secondary-color); }
+ .chat-list::-webkit-scrollbar-thumb { background-color: var(--subheading-color); border-radius: 10px; border: 2px solid var(--secondary-color); }
+.chat-list .message {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    align-items: flex-start;
+}
+ .chat-list .message.outgoing {
+     flex-direction: row-reverse;
+ }
+ .chat-list .message.outgoing .message-content {
+     background: #4285f4;
+     border-radius: 12px 12px 0 12px;
+     color: #fff;
+ }
+ .chat-list .message.outgoing .message-content .text {
+     color: #fff;
+ }
+ .chat-list .message.incoming .message-content {
+      background: var(--secondary-color);
+      border-radius: 12px 12px 12px 0;
+      color: var(--text-color);
+      position: relative;
+ }
+ .chat-list .message.incoming .message-content .text {
+     color: var(--text-color);
+ }
+.chat-list .message .avatar {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.chat-list .message .message-content {
+    padding: 0.8rem 1rem;
+    max-width: 75%;
+    display: flex;
+    flex-direction: column;
+    word-wrap: break-word;
+}
+.chat-list .message .text {
+    white-space: pre-wrap;
+    font-size: 0.95rem;
+}
+.chat-list .message.error .text {
+    color: #e55865;
+}
+.chat-list .message.loading .text {
+    display: none;
+}
+.chat-list .message.loading .avatar {
+    animation: rotate 1.5s linear infinite;
+}
+@keyframes rotate { 100% { transform: rotate(360deg); } }
+.chat-list .message .icon {
+    color: var(--icon-color);
+    cursor: pointer;
+    font-size: 1.1rem;
+    align-self: flex-end;
+    margin-top: 0.5rem;
+    visibility: hidden;
+    transition: color 0.2s ease;
+}
+ .chat-list .message:hover .icon:not(.hide) {
+      visibility: visible;
+  }
+ .chat-list .message .icon:hover {
+      color: var(--text-color);
+ }
+.chat-list .message .icon.hide {
+    visibility: hidden !important;
+}
+.chat-list .message .loading-indicator {
+    display: none;
+    gap: 0.5rem;
+    width: 60px;
+    align-items: center;
+     padding-top: 5px;
+}
+.chat-list .message.loading .loading-indicator {
+    display: flex;
+}
+.chat-list .message .loading-indicator .loading-bar {
+    height: 8px;
+    width: 100%;
+    border-radius: 5px;
+    background-position: -800px 0;
+    background: linear-gradient(to right, #8e44ad, var(--primary-color), #c039a3);
+    animation: loading 2s linear infinite;
+}
+@keyframes loading { 0% { background-position: -800px 0; } 100% { background-position: 800px 0; } }
+.typing-area {
+    position: fixed;
+    width: 100%;
+    left: 0;
+    bottom: 0;
+    padding: 1rem;
+    background: var(--primary-color);
+    border-top: 1px solid var(--secondary-color);
+     z-index: 20;
+}
+.typing-area :where(.typing-form, .action-buttons) {
+    display: flex;
+    gap: 0.75rem;
+}
+.typing-form {
+     align-items: center;
+ }
+.typing-form .input-wrapper {
+    width: 100%;
+    display: flex;
+    position: relative;
+}
+.typing-form .typing-input {
+    width: 100%;
+    min-height: 56px;
+    max-height: 150px;
+    border: none;
+    outline: none;
+    resize: none;
+    font-size: 1rem;
+    color: var(--text-color);
+    padding: 1.1rem 4rem 1.1rem 1.5rem;
+    border-radius: 28px;
+    background: var(--secondary-color);
+     line-height: 1.4;
+     overflow-y: auto;
+     scrollbar-width: none;
+     -ms-overflow-style: none;
+}
+ .typing-form .typing-input::-webkit-scrollbar { display: none; }
+.typing-form .typing-input:focus {
+    background: var(--secondary-hover-color);
+}
+.typing-form .typing-input::placeholder {
+    color: var(--placeholder-color);
+}
+.typing-area .icon {
+    width: 50px;
+    height: 50px;
+    flex-shrink: 0;
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    font-size: 1.4rem;
+    color: var(--icon-color);
+    align-items: center;
+    justify-content: center;
+    background: var(--secondary-color);
+    transition: 0.2s ease;
+     border: none;
+     outline: none;
+}
+.typing-area .icon:hover {
+    background: var(--secondary-hover-color);
+    color: var(--text-color);
+}
+.typing-form #send-message-button {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+     transform: scale(0);
+     background: transparent;
+    transition: transform 0.2s ease;
+    margin: 3px;
+}
+.typing-form .typing-input:valid {
+ }
+.typing-area .disclaimer-text {
+    text-align: center;
+    font-size: 0.75rem;
+    margin-top: 0.75rem;
+    color: var(--placeholder-color);
+}
+@media (max-width: 980px) {
+     .header, .chat-list .message, .typing-form {
+         max-width: 100%;
+     }
+ }
+@media (max-width: 768px) {
+    .header :is(.title, .subtitle) {
+        font-size: 1.8rem;
+        line-height: 1.3;
+    }
+    .header .subtitle {
+        font-size: 1.2rem;
+    }
+    .suggestion-list { margin-top: 3vh; }
+    .suggestion-list .suggestion { width: 180px; padding: 0.8rem; }
+    .suggestion-list .suggestion .text { font-size: 0.85rem; }
+    .suggestion-list .suggestion .icon { width: 30px; height: 30px; font-size: 1rem;}
+    .chat-list { height: calc(100vh - 120px); padding: 0.5rem; }
+    .chat-list .message { gap: 0.5rem; margin-top: 1rem;}
+    .chat-list .message .avatar { width: 35px; height: 35px; }
+    .chat-list .message .message-content { padding: 0.6rem 0.8rem; max-width: 85%; }
+    .chat-list .message .text { font-size: 0.9rem; }
+    .chat-list .message .icon { display: none; }
+    .typing-area { padding: 0.5rem; }
+    .typing-area :where(.typing-form, .action-buttons) { gap: 0.4rem; }
+    .typing-form .input-wrapper { }
+    .typing-form .typing-input {
+         padding: 0.8rem 3.5rem 0.8rem 1rem;
+         min-height: 50px;
+         border-radius: 25px;
+     }
+    .typing-area .icon { height: 44px; width: 44px; font-size: 1.3rem;}
+    .typing-form #send-message-button { margin: 3px; }
+    .typing-area .disclaimer-text { font-size: 0.7rem; margin-top: 0.5rem;}
+}
+    </style>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+</head>
+<body>
+    <header class="header">
+        <h1 class="title">Мой Rust бот</h1> <p class="subtitle">Чем могу помочь?</p>
+        <ul class="suggestion-list">
+            <li class="suggestion">
+                <h4 class="text">Какая погода в Санкт-Петербурге?</h4>
+                <span class="icon material-symbols-rounded">cloud</span> </li>
+            <li class="suggestion">
+                <h4 class="text">Который час в Нью-Йорке?</h4>
+                <span class="icon material-symbols-rounded">schedule</span> </li>
+            <li class="suggestion">
+                <h4 class="text">Расскажи о себе</h4>
+                <span class="icon material-symbols-rounded">smart_toy</span> </li>
+            <li class="suggestion">
+                 <h4 class="text">Помощь</h4>
+                 <span class="icon material-symbols-rounded">help_outline</span> </li>
+        </ul>
+    </header>
+
+    <div class="chat-list">
+        </div>
+
+    <div class="typing-area">
+        <form class="typing-form">
+            <div class="input-wrapper">
+                <textarea class="typing-input" placeholder="Введите ваш запрос..." required></textarea>
+                <button id="send-message-button" type="submit" class="icon material-symbols-rounded">send</button>
+            </div>
+            <div class="action-buttons">
+                <span id="theme-toggle-button" class="icon material-symbols-rounded">light_mode</span>
+                <span id="delete-chat-button" class="icon material-symbols-rounded">delete</span>
+            </div>
+        </form>
+        <p class="disclaimer-text">
+            Бот может ошибаться. Пожалуйста, проверяйте важную информацию.
+        </p>
+    </div>
+
+<script>
+        const typingForm = document.querySelector(".typing-form");
+        const chatContainer = document.querySelector(".chat-list");
+        const suggestions = document.querySelectorAll(".suggestion");
+        const toggleThemeButton = document.querySelector("#theme-toggle-button");
+        const deleteChatButton = document.querySelector("#delete-chat-button");
+        const typingInput = typingForm.querySelector(".typing-input");
+        const sendMessageButton = typingForm.querySelector("#send-message-button");
+        const headerSection = document.querySelector(".header");
+
+        let socket = null;
+        let currentAssistantMessageDiv = null;
+
+        // +++ WebSocket Логика ---
+        function connectWebSocket() {
+            const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+            const wsUrl = `${wsProtocol}//${window.location.host}/ws/`;
+            console.log("[WS] Подключение:", wsUrl);
+
+            socket = new WebSocket(wsUrl);
+
+            socket.onopen = (event) => {
+                console.log("[WS] Подключение открыто:", event);
+            };
+
+            socket.onmessage = (event) => {
+                console.log("[WS] Cjj,otybt yt gjllth;bdftn:", event.data);
+                const botResponse = event.data;
+
+                if (currentAssistantMessageDiv) {
+                    console.log("[WS] Поиск сообщения div (currentAssistantMessageDiv).");
+
+                    // +++ НУЖНО ДОДЕЛАТЬ
+                    currentAssistantMessageDiv.classList.remove("loading");
+                    // ------------------------------------------------
+
+                    const textElement = currentAssistantMessageDiv.querySelector(".text");
+                    const loadingIndicator = currentAssistantMessageDiv.querySelector(".loading-indicator");
+                    const avatar = currentAssistantMessageDiv.querySelector(".avatar");
+                    const copyIcon = currentAssistantMessageDiv.querySelector(".icon");
+
+                    if (loadingIndicator) {
+                        console.log("[WS] Удаление индикации.");
+                        loadingIndicator.remove();
+                    } else {
+                         console.warn("[WS] Нет содержания контейнера.");
+                    }
+                    if (avatar) avatar.style.animation = 'none';
+
+                    if (textElement) {
+                        console.log("[WS] Отключение эффекта элемента.");
+                        textElement.textContent = botResponse; //  textContent
+
+                        // Можно раскомментировать для эффекта печати, но он работает через раз, не знаю что я там поломал:
+                        // textElement.textContent = ""; // Очистить
+                        // showTypingEffect(botResponse, textElement, currentAssistantMessageDiv);
+
+                        if (copyIcon) copyIcon.classList.remove("hide");
+
+                    } else {
+                        console.error("[WS] Нет текста!");
+                    }
+
+                } else {
+                    console.warn("[WS] Ну и ну.");
+                    displayMessage(botResponse, "incoming");
+                }
+                currentAssistantMessageDiv = null;
+            };
+
+            socket.onerror = (event) => { 
+                console.error("[WS] Вебсокет ошибка:", event);
+                 displayMessage("Ошибка подключения к чату. Попробуйте обновить страницу.", "incoming", "error");
+                 if (currentAssistantMessageDiv) currentAssistantMessageDiv.remove();
+                 currentAssistantMessageDiv = null;
+            };
+
+            socket.onclose = (event) => { 
+                console.log("[WS] Соединение закрыто:", event);
+                displayMessage("Соединение с чатом закрыто.", "incoming", "error");
+                if (currentAssistantMessageDiv) currentAssistantMessageDiv.remove();
+                socket = null;
+                currentAssistantMessageDiv = null;
+            };
+        }
+
+        // +++ Остальные функции ---
+		// Хочу позже сделать красивую анимацию
+        const loadThemeFromLocalstorage = () => { /* daymode */
+            const isLightMode = (localStorage.getItem("themeColor") === "light_mode");
+            document.body.classList.toggle("light_mode", isLightMode);
+            toggleThemeButton.innerText = isLightMode ? "dark_mode" : "light_mode";
+        };
+        const createMessageElement = (content, ...classes) => { 
+            const div = document.createElement("div");
+            div.classList.add("message", ...classes);
+            div.innerHTML = content;
+            return div;
+        };
+         // Функция эффекта печати (пока не используется в onmessage, надо доделать)
+         const showTypingEffect = (text, textElement, messageDiv) => { 
+             console.log("[TypingEffect] Начать анимацию отсюда:", text);
+             const words = text.split(' ');
+             let currentWordIndex = 0;
+             textElement.textContent = "";
+             const intervalId = setInterval(() => {
+                 if(currentWordIndex < words.length) {
+                      if (currentWordIndex > 0) textElement.textContent += ' ';
+                      textElement.textContent += words[currentWordIndex];
+                      currentWordIndex++;
+                      chatContainer.scrollTo(0, chatContainer.scrollHeight);
+                  } else {
+                     clearInterval(intervalId);
+                 }
+             }, 50);
+         };
+        function displayMessage(message, type, ...extraClasses) { 
+             const avatarSrc = (type === "outgoing") ? "images/user.png" : "images/bot.png";
+             const html = `<img class="avatar" src="${avatarSrc}" alt="${type} avatar">
+                           <div class="message-content"> <p class="text"></p> </div>
+                           ${type === 'incoming' ? '<span onClick="copyMessage(this)" class="icon material-symbols-rounded hide">content_copy</span>' : ''}`;
+            const messageDiv = createMessageElement(html, type, ...extraClasses);
+            const textElement = messageDiv.querySelector(".text");
+            textElement.textContent = message;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTo(0, chatContainer.scrollHeight);
+            return messageDiv;
+        };
+        const displayBotTypingIndicator = () => { 
+             const avatarSrc = "images/bot.png";
+             const html = `<img class="avatar" src="${avatarSrc}" alt="bot avatar">
+                           <div class="message-content"> <p class="text"></p> <div class="loading-indicator"> <div class="loading-bar"></div> <div class="loading-bar"></div> <div class="loading-bar"></div> </div> </div>
+                           <span onClick="copyMessage(this)" class="icon material-symbols-rounded hide">content_copy</span>`;
+            currentAssistantMessageDiv = createMessageElement(html, "incoming", "loading");
+            chatContainer.appendChild(currentAssistantMessageDiv);
+            chatContainer.scrollTo(0, chatContainer.scrollHeight);
+        };
+        const copyMessage = (copyButton) => { 
+            const messageElement = copyButton.closest('.message');
+            if (!messageElement) return;
+            const textElement = messageElement.querySelector(".text");
+            if (!textElement) return;
+            const messageText = textElement.textContent;
+            navigator.clipboard.writeText(messageText).then(() => {
+                copyButton.innerText = "done";
+                setTimeout(() => copyButton.innerText = "content_copy", 1000);
+            }).catch(err => {
+                console.error('Ошибка зашрузки текста: ', err);
+            });
+        };
+        const handleOutgoingChat = (messageText) => { 
+             messageText = messageText.trim();
+             if (!messageText) return;
+             displayMessage(messageText, "outgoing");
+             if (socket && socket.readyState === WebSocket.OPEN) {
+                 console.log("[WS] Отправлено сообщение:", messageText);
+                 socket.send(messageText);
+                 displayBotTypingIndicator();
+             } else {
+                 console.error("[WS] нет коннекта с сокетом.");
+                 displayMessage("Не удается отправить сообщение. Нет соединения с сервером.", "incoming", "error");
+             }
+             typingInput.value = "";
+             typingInput.style.height = 'auto';
+             sendMessageButton.style.transform = 'scale(0)';
+             if (!document.body.classList.contains("hide-header")) {
+                document.body.classList.add("hide-header");
+                adjustChatHeight();
+                setTimeout(() => chatContainer.scrollTo(0, chatContainer.scrollHeight), 100);
+             }
+        };
+        toggleThemeButton.addEventListener("click", () => { 
+            const isLightMode = document.body.classList.toggle("light_mode");
+            localStorage.setItem("themeColor", isLightMode ? "light_mode" : "dark_mode");
+            toggleThemeButton.innerText = isLightMode ? "dark_mode" : "light_mode";
+        });
+        deleteChatButton.addEventListener("click", () => { 
+             if(confirm("Очистить чат?")) {
+                 chatContainer.innerHTML = "";
+                 currentAssistantMessageDiv = null;
+                 document.body.classList.remove("hide-header");
+                 adjustChatHeight();
+             }
+        });
+        suggestions.forEach(suggestion => { 
+            suggestion.addEventListener("click", (e) => {
+                e.stopPropagation();
+                const messageText = suggestion.querySelector(".text").innerText;
+                handleOutgoingChat(messageText);
+            });
+        });
+        typingForm.addEventListener("submit", (e) => { 
+            e.preventDefault();
+            handleOutgoingChat(typingInput.value);
+        });
+         typingInput.addEventListener('keydown', (e) => { 
+              if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleOutgoingChat(typingInput.value);
+              }
+          });
+         typingInput.addEventListener('input', () => { 
+              typingInput.style.height = 'auto';
+              typingInput.style.height = typingInput.scrollHeight + 'px';
+              sendMessageButton.style.transform = typingInput.value.trim() ? 'scale(1)' : 'scale(0)';
+          });
+         function adjustChatHeight() { 
+              const typingAreaHeight = document.querySelector('.typing-area')?.offsetHeight || 70;
+              const headerVisibleHeight = document.body.classList.contains("hide-header") ? 0 : (headerSection?.offsetHeight || 0);
+              const extraPadding = 16;
+              chatContainer.style.height = `calc(100vh - ${typingAreaHeight}px - ${headerVisibleHeight}px - ${extraPadding}px)`;
+          }
+         window.addEventListener('load', () => { 
+              loadThemeFromLocalstorage();
+              connectWebSocket();
+              adjustChatHeight();
+              const preloadUserImg = new Image(); preloadUserImg.src = "images/user.png";
+              const preloadBotImg = new Image(); preloadBotImg.src = "images/bot.png";
+          });
+          window.addEventListener('resize', adjustChatHeight);
+
+    </script>
+
+</body>
+</html>

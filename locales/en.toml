@@ -1,0 +1,25 @@
+greeting = "Hello! How can I help you?"
+status_check = "Checking... Telegram - OK, WEB - OK"
+status_check_command = "Status check... Telegram - OK, WEB - OK"
+unknown_command = "Sorry, I didn't understand '{}'.\nTry:\n- 'Hello'\n- 'How are you?'\n- 'Weather in [City]'\n- 'Time in [City]'\nOr use the /help command."
+fallback_reply = "Didn't quite catch that. Use /help for commands."
+error_generic = "An error occurred while processing your request."
+
+weather_request_city = "Please specify a city for the weather forecast."
+weather_fetch_error = "Couldn't get weather for '{}': {}"
+weather_response = "In {} it is currently {}°C, {}."
+
+time_request_city = "Please specify a city to get the time for."
+time_fetch_error = "Couldn't get time for '{}': {}"
+time_response = "In {} it is now {}"
+time_zone_not_found = "Timezone not found for '{}'."
+time_zone_parse_error = "Error parsing timezone '{}'."
+time_server_response = "Current server time (UTC): {}"
+time_city_suggestion = "To get the time in a specific city, ask for example: 'What time is it in Paris?'"
+
+about_text = """
+I am a simple bot developed in Rust.
+Libraries used: teloxide, actix-web, reqwest, chrono and others.
+Web interface port: {}
+"""
+help_extra = "You can also ask for weather or time in a city."
