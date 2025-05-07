@@ -46,3 +46,5 @@
     ```bash
     docker run -d --name rust-bot-container -p 6001:6001 --env-file .env my-rust-bot-app
     ```
+
+### Это учебный проект, я не могу дать гарантии развития в будущем.
